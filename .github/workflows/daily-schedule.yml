@@ -1,0 +1,26 @@
+name: Daily schedule update (Asia/Manila)
+
+on:
+  schedule:
+    # 00:05 Asia/Manila = 16:05 UTC
+    - cron: '5 16 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call schedule-processor API
+        env:
+          TARGET_URL: https://www.stirams.site/api/schedule-processor
+          CRON_TOKEN: ${{ secrets.CRON_TOKEN }}
+        run: |
+          set -e
+          # Send an authenticated request if CRON_TOKEN is set; header is optional in current route
+          if [ -n "$CRON_TOKEN" ]; then
+            curl -fsS -X POST "$TARGET_URL" -H "x-cron-token: $CRON_TOKEN"
+          else
+            curl -fsS -X POST "$TARGET_URL"
+          fi
+
+

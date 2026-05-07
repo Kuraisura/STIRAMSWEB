@@ -1,0 +1,704 @@
+/* Tailwind CSS v4 Configuration */
+/* stylelint-disable at-rule-no-unknown */
+/* stylelint-disable scss/at-rule-no-unknown */
+
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+
+@source "../app";
+@source "../components";
+@source "../lib";
+@source "../hooks";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: oklch(0.11 0 0); /* Deeper, richer dark background */
+  --foreground: oklch(0.98 0 0); /* Bright white text for maximum contrast */
+  --card: oklch(0.15 0.01 240); /* Slightly elevated cards with subtle blue tint */
+  --card-foreground: oklch(0.98 0 0);
+  --popover: oklch(0.18 0.01 240); /* Elevated popovers */
+  --popover-foreground: oklch(0.98 0 0);
+  --primary: oklch(0.65 0.2 260); /* Vibrant blue for primary actions */
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.25 0.01 240); /* Subtle secondary surfaces */
+  --secondary-foreground: oklch(0.95 0 0);
+  --muted: oklch(0.22 0.01 240); /* Muted backgrounds */
+  --muted-foreground: oklch(0.75 0 0); /* Softer text for muted elements */
+  --accent: oklch(0.28 0.02 260); /* Accent backgrounds */
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.55 0.22 25); /* Improved red for errors */
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.25 0.01 240); /* Subtle borders */
+  --input: oklch(0.18 0.01 240); /* Dark input backgrounds */
+  --ring: oklch(0.5 0.2 260); /* Focus rings */
+  --chart-1: oklch(0.55 0.25 140); /* Green for charts */
+  --chart-2: oklch(0.65 0.2 260); /* Blue for charts */
+  --chart-3: oklch(0.7 0.2 50); /* Yellow/Orange for charts */
+  --chart-4: oklch(0.6 0.25 320); /* Purple for charts */
+  --chart-5: oklch(0.65 0.25 20); /* Red/Orange for charts */
+  --sidebar: oklch(0.13 0.01 240); /* Sidebar background */
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.6 0.2 260); /* Active sidebar item */
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.2 0.01 240); /* Hover state */
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(0.22 0.01 240);
+  --sidebar-ring: oklch(0.5 0.2 260);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  
+  /* Prevent image overflow issues - global fix */
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  /* Prevent images from overflowing containers */
+  img[style*="width"], img[style*="height"] {
+    max-width: 100% !important;
+    height: auto !important;
+    object-fit: contain;
+  }
+  
+  /* Ensure images in containers don't overflow */
+  .overflow-hidden img,
+  img.overflow-hidden {
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
+  }
+  
+  /* Ensure proper dark mode text colors */
+  .dark {
+    color-scheme: dark;
+  }
+
+  /* Improve dark mode text visibility for elements without explicit color classes */
+  .dark table td, .dark table th {
+    @apply text-gray-100;
+  }
+  
+  /* Force visibility for common text elements in dark mode */
+  .dark .text-foreground {
+    @apply text-gray-100;
+  }
+  
+  /* Enhanced dark mode for better contrast and readability */
+  .dark {
+    @apply bg-[#0a0a0f] text-gray-100;
+  }
+  
+  /* Dark mode cards with better elevation */
+  .dark .bg-white {
+    @apply bg-neutral-900 border-neutral-800;
+  }
+  
+  .dark .bg-gray-50 {
+    @apply bg-neutral-800/50;
+  }
+  
+  .dark .bg-gray-100 {
+    @apply bg-neutral-800;
+  }
+  
+  /* Dark mode text colors */
+  .dark .text-gray-900 {
+    @apply text-gray-100;
+  }
+  
+  .dark .text-gray-800 {
+    @apply text-gray-200;
+  }
+  
+  .dark .text-gray-700 {
+    @apply text-gray-300;
+  }
+  
+  .dark .text-gray-600 {
+    @apply text-gray-400;
+  }
+  
+  .dark .text-gray-500 {
+    @apply text-gray-500;
+  }
+  
+  /* Dark mode borders */
+  .dark .border-gray-200 {
+    @apply border-neutral-700;
+  }
+  
+  .dark .border-gray-300 {
+    @apply border-neutral-600;
+  }
+  
+  /* Dark mode inputs */
+  .dark input,
+  .dark textarea,
+  .dark select {
+    @apply bg-neutral-800 border-neutral-700 text-gray-100 placeholder:text-gray-500;
+  }
+  
+  /* Dark mode buttons */
+  .dark button {
+    @apply text-gray-100;
+  }
+  
+  /* Dark mode modals/dialogs */
+  .dark [role="dialog"] {
+    @apply bg-neutral-900 border-neutral-800;
+  }
+  
+  /* Dark mode charts */
+  .dark .recharts-wrapper {
+    @apply text-gray-100;
+  }
+  
+  /* Dark mode scrollbars */
+  .dark ::-webkit-scrollbar-track {
+    @apply bg-neutral-900;
+  }
+  
+  .dark ::-webkit-scrollbar-thumb {
+    @apply bg-neutral-600 hover:bg-neutral-500;
+  }
+  /* Disable text selection globally except in editable controls */
+  html, body, *:not(input):not(textarea):not(select):not([contenteditable="true"]) {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+/* Dark mode polish: subtle elevated surfaces and readable inputs */
+.dark .card-dark {
+  @apply bg-neutral-900/60 backdrop-blur border border-white/10 shadow-[0_10px_30px_rgba(0,0,0,0.35)];
+}
+.dark .input-dark {
+  @apply bg-neutral-900 text-gray-100 placeholder:text-gray-400 border-white/10 focus:border-blue-500/50 focus:ring-blue-500/30;
+}
+.dark .btn-dark-outline {
+  @apply border-white/20 text-gray-100 hover:bg-white/10;
+}
+}
+
+@layer components {
+  .btn-sti-primary {
+    @apply bg-linear-to-r from-red-600 to-blue-600 hover:from-red-700 hover:to-blue-700 text-white font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl;
+  }
+
+  .btn-sti-secondary {
+    @apply bg-linear-to-r from-blue-600 to-red-600 hover:from-blue-700 hover:to-red-700 text-white font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl;
+  }
+
+  .card-sti {
+    @apply bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-lg shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 ease-in-out;
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-slideInRight {
+    animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-slideInLeft {
+    animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .page-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slideInRight {
+    from {
+      opacity: 0;
+      transform: translateX(50px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-8px);
+    }
+  }
+
+  @keyframes gentle-pulse {
+    0%, 100% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+  }
+
+  @keyframes smooth-bounce {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  @keyframes subtle-rotate {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes glow {
+    0%, 100% {
+      box-shadow: 0 0 5px rgba(59, 130, 246, 0.5), 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.5);
+    }
+  }
+
+  .animate-float {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .animate-gentle-pulse {
+    animation: gentle-pulse 2.5s ease-in-out infinite;
+  }
+
+  .animate-smooth-bounce {
+    animation: smooth-bounce 2s ease-in-out infinite;
+  }
+
+  .animate-subtle-rotate {
+    animation: subtle-rotate 20s linear infinite;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pageTransition {
+    from {
+      opacity: 0;
+      transform: scale(0.98) translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .loading-spinner {
+    @apply inline-block w-4 h-4 border-2 border-solid border-current border-r-transparent rounded-full animate-spin;
+  }
+
+  /* Enhanced smooth tab transitions */
+  .tab-content {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: opacity, transform;
+  }
+
+  .tab-content-enter {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  .tab-content-enter-active {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .tab-content-exit {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+
+  .tab-content-exit-active {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+
+  /* Smooth hover effects */
+  .hover-lift {
+    @apply transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-lg;
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-300 ease-out hover:scale-105;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-300 ease-out hover:shadow-xl hover:shadow-blue-500/50;
+  }
+
+  /* ── Staggered entrance animations ────────────────────────────── */
+  .animate-stagger-1 { animation: stagger-fade 0.4s cubic-bezier(0.16,1,0.3,1) 0.04s both; }
+  .animate-stagger-2 { animation: stagger-fade 0.4s cubic-bezier(0.16,1,0.3,1) 0.08s both; }
+  .animate-stagger-3 { animation: stagger-fade 0.4s cubic-bezier(0.16,1,0.3,1) 0.12s both; }
+  .animate-stagger-4 { animation: stagger-fade 0.4s cubic-bezier(0.16,1,0.3,1) 0.16s both; }
+  .animate-stagger-5 { animation: stagger-fade 0.4s cubic-bezier(0.16,1,0.3,1) 0.20s both; }
+  .animate-stagger-6 { animation: stagger-fade 0.4s cubic-bezier(0.16,1,0.3,1) 0.24s both; }
+
+  @keyframes stagger-fade {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Scale-in popover / card entrance ─────────────────────────── */
+  .animate-scale-in {
+    animation: scale-in 0.3s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* ── Slide-from-bottom for modals / toasts ────────────────────── */
+  .animate-slide-up {
+    animation: slide-up 0.35s cubic-bezier(0.16,1,0.3,1) both;
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Blur-in (great for lazy-loaded sections) ─────────────────── */
+  .animate-blur-in {
+    animation: blur-in 0.5s ease-out both;
+  }
+
+  @keyframes blur-in {
+    from { opacity: 0; filter: blur(8px); }
+    to   { opacity: 1; filter: blur(0); }
+  }
+}
+
+/* Smooth transitions for sidebar navigation */
+.sidebar-transition {
+  @apply transition-all duration-300 ease-in-out;
+}
+
+/* Custom scrollbar - Modern & Elegant */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.4), rgba(107, 114, 128, 0.5));
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(107, 114, 128, 0.6), rgba(75, 85, 99, 0.7));
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: rgba(31, 41, 55, 0.3);
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.2), rgba(209, 213, 219, 0.25));
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.3), rgba(209, 213, 219, 0.4));
+}
+
+/* Hide scrollbar for swipeable containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* Custom scrollbar for sidebar - Elegant & Subtle */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.3), rgba(107, 114, 128, 0.4));
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(107, 114, 128, 0.5), rgba(75, 85, 99, 0.6));
+  background-clip: padding-box;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.15), rgba(209, 213, 219, 0.2));
+  background-clip: padding-box;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(156, 163, 175, 0.25), rgba(209, 213, 219, 0.35));
+  background-clip: padding-box;
+}
+
+/* Loading states */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Custom STI Brand Colors */
+.sti-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-foreground) 100%);
+}
+
+.sti-secondary {
+  background: linear-gradient(135deg, var(--secondary) 0%, #ffc107 100%);
+}
+
+.sti-accent {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-foreground) 100%);
+}
+
+/* Page transition wrapper */
+.page-wrapper {
+  min-height: 100vh;
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-wrapper.loading {
+  opacity: 0.7;
+}
+
+/* Smooth content transitions */
+.content-transition {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.content-fade-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.content-fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.content-fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.content-fade-exit-active {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+/* Loading Bar Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* Print Styles */
+@media print {
+  .print-hide {
+    @apply hidden;
+  }
+
+  .print-full {
+    @apply w-full;
+  }
+}
+
+/* Accessibility Improvements */
+.focus-visible {
+  @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  .high-contrast {
+    @apply border-2 border-black;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

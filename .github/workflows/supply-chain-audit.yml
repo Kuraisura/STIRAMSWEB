@@ -1,0 +1,200 @@
+# ============================================================================
+# A03: Software Supply Chain Security — Dependency Audit Workflow
+# ============================================================================
+# OWASP A03:2025 — Software and Data Integrity Failures
+#
+# Runs on: every push, every PR, and daily at 06:00 UTC (cron).
+# Actions:
+#   1. npm audit  — built-in Node advisory DB
+#   2. Snyk test  — deeper SCA with reachability analysis  (optional)
+#   3. Lock-file lint — ensures package-lock.json is deterministic
+#   4. License check  — flags copyleft / unknown licenses
+#
+# Secrets required (set in Settings → Secrets):
+#   SNYK_TOKEN  — free at https://app.snyk.io (optional but recommended)
+# ============================================================================
+
+name: "🛡️ Supply Chain Audit"
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/supply-chain-audit.yml"
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily at 06:00 UTC — catches newly published advisories
+    - cron: "0 6 * * *"
+  workflow_dispatch: # manual trigger
+
+permissions:
+  contents: read
+  security-events: write        # for uploading SARIF (GitHub Advanced Security)
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Stage 1: npm audit (always runs, zero-cost)
+  # -----------------------------------------------------------------------
+  npm-audit:
+    name: "npm audit (critical/high)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies (CI mode)
+        run: npm ci --ignore-scripts    # --ignore-scripts prevents malicious postinstall
+
+      - name: Run npm audit (production only)
+        run: |
+          echo "::group::npm audit output"
+          npm audit --omit=dev --audit-level=high --json > audit-report.json || true
+          echo "::endgroup::"
+
+          # Parse and fail only on critical/high
+          CRITICAL=$(jq '.metadata.vulnerabilities.critical // 0' audit-report.json)
+          HIGH=$(jq '.metadata.vulnerabilities.high // 0' audit-report.json)
+
+          echo "Critical: $CRITICAL | High: $HIGH"
+
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "::error::Found $CRITICAL critical and $HIGH high vulnerabilities"
+            npm audit --omit=dev --audit-level=high 2>&1 || true
+            exit 1
+          fi
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-report
+          path: audit-report.json
+          retention-days: 30
+
+  # -----------------------------------------------------------------------
+  # Stage 2: Snyk deep scan (runs if SNYK_TOKEN secret exists)
+  # -----------------------------------------------------------------------
+  snyk-scan:
+    name: "Snyk SCA"
+    runs-on: ubuntu-latest
+    if: ${{ secrets.SNYK_TOKEN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run Snyk test
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: >
+            --severity-threshold=high
+            --json-file-output=snyk-report.json
+            --all-projects
+        continue-on-error: true   # don't block PR for medium/low
+
+      - name: Upload Snyk SARIF (GitHub Security tab)
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-report.json
+        continue-on-error: true
+
+  # -----------------------------------------------------------------------
+  # Stage 3: Lock-file integrity
+  # -----------------------------------------------------------------------
+  lockfile-lint:
+    name: "Lock-file integrity"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate lock file
+        run: |
+          # Ensure package-lock.json is in sync with package.json
+          npm install --package-lock-only --ignore-scripts
+          git diff --exit-code package-lock.json || {
+            echo "::error::package-lock.json is out of sync with package.json"
+            exit 1
+          }
+
+      - name: Check for http:// registry URLs
+        run: |
+          # All registry URLs must be HTTPS
+          if grep -q '"resolved": "http://' package-lock.json; then
+            echo "::error::Found insecure HTTP registry URL in package-lock.json"
+            grep '"resolved": "http://' package-lock.json
+            exit 1
+          fi
+          echo "✅ All registry URLs use HTTPS"
+
+      - name: Check for git:// protocol
+        run: |
+          # git:// is unencrypted — reject it
+          if grep -qE '"resolved":.*"git://' package-lock.json; then
+            echo "::error::Found insecure git:// protocol in package-lock.json"
+            exit 1
+          fi
+          echo "✅ No insecure git:// protocols found"
+
+  # -----------------------------------------------------------------------
+  # Stage 4: License compliance
+  # -----------------------------------------------------------------------
+  license-check:
+    name: "License compliance"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Run license check
+        run: |
+          # Flag GPL / AGPL / SSPL / unlicensed packages
+          license-checker --production --failOn \
+            "GPL-2.0;GPL-3.0;AGPL-1.0;AGPL-3.0;SSPL-1.0;UNLICENSED" \
+            --json > license-report.json || {
+              echo "::error::Found packages with restricted or missing licenses"
+              cat license-report.json | head -100
+              exit 1
+            }
+          echo "✅ All production licenses are permissive"
+
+      - name: Upload license report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: license-report.json
+          retention-days: 30

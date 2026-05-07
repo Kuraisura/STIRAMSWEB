@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>STI RAMS | Maintenance</title>
+  <style>
+    :root {
+      --bg-1: #050b1b;
+      --bg-2: #081a3a;
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #e7eefc;
+      --muted: #a8b6d8;
+      --accent: #3b82f6;
+      --accent-2: #06b6d4;
+      --card: rgba(14, 25, 56, 0.86);
+      --ok: #86efac;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1300px 700px at 10% 5%, #12377f55 0%, transparent 60%),
+        radial-gradient(1000px 600px at 90% 95%, #0891b255 0%, transparent 62%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+    }
+
+    .grid-overlay {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 30px 30px;
+      pointer-events: none;
+    }
+
+    .container {
+      min-height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .panel {
+      width: min(760px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+      padding: 26px 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(59, 130, 246, 0.5);
+      background: rgba(59, 130, 246, 0.15);
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      color: #bcd6ff;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    h1 {
+      margin: 18px 0 10px;
+      font-size: clamp(1.5rem, 4.2vw, 2.35rem);
+      line-height: 1.15;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(0.98rem, 2.6vw, 1.08rem);
+      line-height: 1.6;
+    }
+
+    .status {
+      margin-top: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(134, 239, 172, 0.35);
+      background: rgba(22, 163, 74, 0.14);
+      border-radius: 10px;
+      padding: 8px 12px;
+      color: #dcfce7;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--ok);
+      box-shadow: 0 0 0 0 rgba(134, 239, 172, 0.6);
+      animation: pulse 1.8s infinite;
+    }
+
+    .meta {
+      margin-top: 22px;
+      color: #8ea4d4;
+      font-size: 0.9rem;
+    }
+
+    .meta strong {
+      color: #d6e4ff;
+    }
+
+    .footer {
+      margin-top: 18px;
+      color: #7f93bf;
+      font-size: 0.84rem;
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(134, 239, 172, 0.6);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(134, 239, 172, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(134, 239, 172, 0);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-overlay"></div>
+  <main class="container">
+    <section class="panel" role="status" aria-live="polite">
+      <div class="brand">STI RAMS System Notice</div>
+      <h1>System is temporarily under maintenance</h1>
+      <p class="subtitle">
+        We're currently rebuilding and applying updates to improve performance and reliability.
+        The service should return in a few moments. Thank you for your patience.
+      </p>
+      <div class="status">
+        <span class="dot"></span>
+        <span id="phase-status">Live update in progress</span>
+      </div>
+      <p class="meta">
+        You can keep this page open. It will be replaced automatically once the production server is back online.
+      </p>
+      <p class="meta" id="maintenance-updated-at">
+        Last updated: waiting for build status...
+      </p>
+      <p class="meta" id="redirect-status">
+        Checking system availability...
+      </p>
+      <p class="footer">
+        STI College Santa Rosa | RFID Attendance Monitoring System
+      </p>
+    </section>
+  </main>
+  <script>
+    (function () {
+      var statusEl = document.getElementById('redirect-status')
+      var phaseEl = document.getElementById('phase-status')
+      var updatedAtEl = document.getElementById('maintenance-updated-at')
+      var attempts = 0
+      var maxAttempts = 240
+      var stopped = false
+
+      function updateMessage(message) {
+        if (statusEl) statusEl.textContent = message
+      }
+
+      function updatePhase(phase, updatedAt) {
+        if (phaseEl && phase) phaseEl.textContent = phase
+        if (updatedAtEl && updatedAt) updatedAtEl.textContent = 'Last updated: ' + updatedAt
+      }
+
+      async function refreshMaintenanceStatus() {
+        try {
+          var response = await fetch('/maintenance-status.txt?_=' + Date.now(), { cache: 'no-store' })
+          if (!response.ok) return
+          var text = await response.text()
+          var lines = (text || '').split(/\r?\n/).filter(Boolean)
+          if (lines.length > 0) {
+            updatePhase(lines[0], lines[1] || null)
+          }
+        } catch {}
+      }
+
+      async function tryRedirect() {
+        if (stopped) return
+        attempts += 1
+        updateMessage('Checking system availability... Attempt ' + attempts)
+
+        try {
+          var response = await fetch('/api/health?_=' + Date.now(), { cache: 'no-store' })
+          var contentType = (response.headers.get('content-type') || '').toLowerCase()
+          if (response.ok && contentType.indexOf('application/json') >= 0) {
+            stopped = true
+            updateMessage('System is back online. Redirecting to login...')
+            window.location.replace('/auth/login')
+            return
+          }
+        } catch {}
+
+        if (attempts >= maxAttempts) {
+          stopped = true
+          clearInterval(timer)
+          clearInterval(statusTimer)
+          updateMessage('Still updating. Please refresh this page in a few moments.')
+        }
+      }
+
+      var timer = setInterval(tryRedirect, 3000)
+      var statusTimer = setInterval(refreshMaintenanceStatus, 2000)
+      setTimeout(tryRedirect, 1200)
+      setTimeout(refreshMaintenanceStatus, 300)
+    })()
+  </script>
+</body>
+</html>

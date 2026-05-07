@@ -1,0 +1,669 @@
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Class Schedule Modal */}
+      <AddClassModal
+        open={isAddClassModalOpen}
+        onOpenChange={setIsAddClassModalOpen}
+        onSubmit={handleSaveClassSchedule}
+        initialData={editingClassSchedule || undefined}
+        employeeName={viewEmployee?.full_name}
+      />
+
+      {/* Add/Edit Exam Schedule Modal */}
+      <AddExamModal
+        open={isAddExamModalOpen}
+        onOpenChange={setIsAddExamModalOpen}
+        onSubmit={handleSaveExamSchedule}
+        initialData={editingExamSchedule || undefined}
+        employeeName={viewEmployee?.full_name}
+      />
+
+      {/* Day Schedule Modal */}
+      {viewEmployee && (
+        <DayScheduleModal
+          open={isDayScheduleModalOpen}
+          onOpenChange={setIsDayScheduleModalOpen}
+          day={selectedDay}
+          type={selectedScheduleType}
+          schedules={(() => {
+            if (selectedScheduleType === 'class') {
+              return viewSchedules
+                .filter((s: any) => s && s.day_of_week === selectedDay)
+                .map((s: any): DayScheduleItem => ({
+                  schedule_id: s.schedule_id,
+                  time_start: s.time_start || '', // Already formatted in viewSchedules
+                  time_end: s.time_end || '', // Already formatted in viewSchedules
+                  course_code: s.course_code || '',
+                  subject_name: s.subject_name || '',
+                  section: s.section ? String(s.section).trim() : '',
+                  room_code: s.room_code || '',
+                  class_type: s.class_type || '',
+                  type: s.class_type === 'LEC' ? 'Lecture' : 'Lab',
+                  substitute: s.substitute_employee_name || '',
+                }))
+            } else {
+              return viewExamSchedules
+                .filter((s: any) => s && s.day_of_week === selectedDay)
+                .map((s: any): DayScheduleItem => ({
+                  exam_schedule_id: s.exam_schedule_id,
+                  time_start: s.time_start || '', // Already formatted in viewExamSchedules
+                  time_end: s.time_end || '', // Already formatted in viewExamSchedules
+                  course_code: s.course_code || '',
+                  subject: s.subject_name || '',
+                  section: s.section ? String(s.section).trim() : '',
+                  room_code: s.room_code || '',
+                  type: (s.exam_type || s.type || 'Midterm') as 'Prelim' | 'Midterm' | 'Pre-Final' | 'Final',
+                  exam_date: s.exam_date || undefined,
+                }))
+            }
+          })()}
+          employeeName={viewEmployee.full_name}
+          onSave={handleSaveDaySchedule}
+          onDelete={handleDeleteDaySchedule}
+        />
+      )}
+
+      {/* Archive Confirmation - Double step */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive Employee?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to archive <span className="font-semibold">{employeeToDelete?.name}</span>.
+              They will be hidden from the active employee list, but can be restored anytime.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                // Open second confirmation dialog
+                setDeleteDialogOpen(false)
+                setTimeout(() => setDeleteConfirmOpen(true), 0)
+              }}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Archive</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to archive this employee? You can restore them later from the archived employees view.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>No, keep employee</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                await handleArchiveEmployee()
+                setDeleteConfirmOpen(false)
+              }}
+              disabled={isDeleting}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              {isDeleting ? 'Archiving...' : 'Yes, archive'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Staff Type Change Confirmation Dialog */}
+      <AlertDialog open={staffTypeChangeDialogOpen} onOpenChange={setStaffTypeChangeDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure? This cannot be undone.</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>You are about to change the staff type for this employee.</p>
+              {pendingStaffTypeChange && (
+                <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+                  <p className="text-sm font-medium text-amber-900 dark:text-amber-100 mb-1">What will be changed:</p>
+                  <div className="flex items-center gap-2 text-sm text-amber-800 dark:text-amber-200">
+                    <span className="font-semibold">{pendingStaffTypeChange.from}</span>
+                    <ArrowLeftRight className="h-4 w-4" />
+                    <span className="font-semibold">{pendingStaffTypeChange.to}</span>
+                  </div>
+                  {pendingStaffTypeChange.to === 'Non-Teaching' && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                      Employment Status will be automatically set to "Regular" (Fixed).
+                    </p>
+                  )}
+                  {pendingStaffTypeChange.to === 'Teaching' && (
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-2">
+                      Employment Status will be automatically set to "Part Time" (only "Part Time" and "Part Time Full Load" are allowed).
+                    </p>
+                  )}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              onClick={() => {
+                setPendingStaffTypeChange(null)
+                setStaffTypeChangeDialogOpen(false)
+              }}
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (pendingStaffTypeChange) {
+                  // Apply the staff type change
+                  setFormData(prev => {
+                    const updated = { ...prev, staff_type: pendingStaffTypeChange.to }
+                    // Enforce employment status based on new staff type
+                    if (pendingStaffTypeChange.to === 'Non-Teaching') {
+                      updated.employment_status = 'Regular'
+                    } else if (pendingStaffTypeChange.to === 'Teaching') {
+                      updated.employment_status = 'Part Time'
+                    }
+                    
+                    // Clear department if it doesn't match the new staff type
+                    if (formData.department) {
+                      const currentDept = departments.find(d => d.name === formData.department)
+                      if (currentDept && currentDept.category && currentDept.category !== pendingStaffTypeChange.to) {
+                        updated.department = ''
+                      }
+                    }
+                    
+                    return updated
+                  })
+                  setPendingStaffTypeChange(null)
+                  setStaffTypeChangeDialogOpen(false)
+                }
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Confirm Change
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Department Management Dialog */}
+      <Dialog open={isDeptDialogOpen} onOpenChange={(open) => {
+        setIsDeptDialogOpen(open)
+        if (!open) {
+          setDeptDialogSource('manage')
+          // Clear validation errors when dialog closes
+          setDeptInvalidFields(new Set())
+          setDeptValidationErrors([])
+          setShowDeptValidationDialog(false)
+        } else {
+          // Clear validation errors when dialog opens
+          setDeptInvalidFields(new Set())
+          setDeptValidationErrors([])
+          setShowDeptValidationDialog(false)
+        }
+      }}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>{editingDept ? 'Edit Department' : 'Manage Departments'}</DialogTitle>
+            <DialogDescription>
+              {editingDept ? 'Update department information' : 'Create and manage departments'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {departments.length > 0 && (
+              <div className="border rounded-lg p-4 max-h-[300px] overflow-y-auto">
+                <h3 className="font-medium mb-3">Existing Departments</h3>
+                <div className="space-y-2">
+                  {departments.map((dept) => (
+                    <div key={dept.department_id} className="flex items-center justify-between p-2 hover:bg-gray-50 rounded">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium">{dept.name}</p>
+                          {dept.category && (
+                            <Badge variant="outline" className="text-xs">
+                              {dept.category === 'Teaching' ? 'Teaching Staff Department' : dept.category === 'Non-Teaching' ? 'Non Teaching Staff Department' : dept.category}
+                            </Badge>
+                          )}
+                        </div>
+                        {dept.description && <p className="text-sm text-gray-500">{dept.description}</p>}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditDepartment(dept)}
+                        >
+                          <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteDeptDialog(dept)}
+                          className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <Label htmlFor="dept-name">Department Name *</Label>
+                <Input
+                  id="dept-name"
+                  placeholder="e.g., Computer Science, Information Technology / Computer"
+                  value={deptFormName}
+                  onChange={(e) => {
+                    setDeptFormName(e.target.value)
+                    // Clear validation error when user starts typing
+                    if (deptInvalidFields.has('dept-name')) {
+                      setDeptInvalidFields(prev => {
+                        const newSet = new Set(prev)
+                        newSet.delete('dept-name')
+                        return newSet
+                      })
+                    }
+                  }}
+                  maxLength={100}
+                  className={deptInvalidFields.has('dept-name') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+                />
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="dept-acronym">Acronym *</Label>
+                <Input
+                  id="dept-acronym"
+                  placeholder="e.g., CS, IT/CS"
+                  value={deptFormAcronym}
+                  onChange={(e) => {
+                    // Allow all characters including symbols, but uppercase letters
+                    const value = e.target.value
+                    // Uppercase letters while preserving symbols and other characters
+                    const upperValue = value.split('').map(char => {
+                      if (char >= 'a' && char <= 'z') {
+                        return char.toUpperCase()
+                      }
+                      return char // Preserve symbols, numbers, spaces, etc.
+                    }).join('')
+                    setDeptFormAcronym(upperValue)
+                    // Clear validation error when user starts typing
+                    if (deptInvalidFields.has('dept-acronym')) {
+                      setDeptInvalidFields(prev => {
+                        const newSet = new Set(prev)
+                        newSet.delete('dept-acronym')
+                        return newSet
+                      })
+                    }
+                  }}
+                  maxLength={10}
+                  className={deptInvalidFields.has('dept-acronym') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <Label htmlFor="dept-category">Category *</Label>
+                <Select 
+                  value={deptFormCategory} 
+                  onValueChange={(value) => {
+                    setDeptFormCategory(value as 'Teaching' | 'Non-Teaching')
+                    // Clear validation error when user selects a category
+                    if (deptInvalidFields.has('dept-category')) {
+                      setDeptInvalidFields(prev => {
+                        const newSet = new Set(prev)
+                        newSet.delete('dept-category')
+                        return newSet
+                      })
+                    }
+                  }}
+                >
+                  <SelectTrigger className={`h-11 border-gray-300 dark:border-neutral-600 ${deptInvalidFields.has('dept-category') ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Teaching">Teaching Staff Department</SelectItem>
+                    <SelectItem value="Non-Teaching">Non Teaching Staff Department</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="dept-desc">Description (Optional)</Label>
+                <Input
+                  id="dept-desc"
+                  placeholder="Brief description of the department"
+                  value={deptFormDesc}
+                  onChange={(e) => setDeptFormDesc(e.target.value)}
+                  maxLength={500}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsDeptDialogOpen(false)
+                  setEditingDept(null)
+                  setDeptFormName("")
+                  setDeptFormAcronym("")
+                  setDeptFormDesc("")
+                  setDeptFormCategory("")
+                  setDeptDialogSource('manage')
+                }}
+              >
+                Cancel
+              </Button>
+              {editingDept ? (
+                <Button
+                  className="btn-sti-primary"
+                  onClick={handleUpdateDepartment}
+                  disabled={isDeptSubmitting}
+                >
+                  {isDeptSubmitting ? 'Saving...' : 'Update'} Department
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsDeptDialogOpen(false)
+                      setDeptFormName("")
+                      setDeptFormAcronym("")
+                      setDeptFormDesc("")
+                      setDeptFormCategory("")
+                      setDeptDialogSource('manage')
+                    }}
+                    disabled={isDeptSubmitting}
+                  >
+                    Done
+                  </Button>
+                  <Button
+                    className="btn-sti-primary"
+                    onClick={async () => {
+                      await handleCreateDepartment()
+                      // If opened from employee form, close dialog after creation
+                      if (deptDialogSource === 'add-employee' || deptDialogSource === 'edit-employee') {
+                        setIsDeptDialogOpen(false)
+                        setDeptDialogSource('manage')
+                      }
+                    }}
+                    disabled={isDeptSubmitting}
+                  >
+                    {isDeptSubmitting ? 'Saving...' : 'Create'} Department
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Department Validation Dialog */}
+      <AlertDialog open={showDeptValidationDialog} onOpenChange={setShowDeptValidationDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Please fix the following</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please review the fields below.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="mt-2 space-y-1 text-left">
+            {deptValidationErrors.map((err, idx) => (
+              <div key={idx} className="flex items-start gap-2">
+                <span className="mt-1 h-2 w-2 rounded-full bg-destructive" />
+                <span>{err}</span>
+              </div>
+            ))}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowDeptValidationDialog(false)}>Got it</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Department Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDeptDialogOpen} onOpenChange={setDeleteDeptDialogOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+              </div>
+              <div className="flex-1">
+                <AlertDialogTitle className="text-xl">Delete Department</AlertDialogTitle>
+                <AlertDialogDescription className="text-base mt-1">
+                  This action cannot be undone
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+          
+          <div className="my-4 space-y-3">
+            <div className="rounded-lg border-2 border-red-200 bg-red-50 p-4">
+              <p className="font-semibold text-red-900 mb-2">
+                Are you sure you want to permanently delete:
+              </p>
+              <p className="text-lg font-bold text-red-700">
+                "{deptToDelete?.name}"
+              </p>
+              {deptToDelete?.description && (
+                <p className="text-sm text-red-600 mt-1">{deptToDelete.description}</p>
+              )}
+            </div>
+            
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+              <div className="flex gap-2">
+                <div className="text-yellow-600 mt-0.5">⚠️</div>
+                <div className="text-sm text-yellow-800">
+                  <p className="font-semibold mb-1">Warning:</p>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>This department will be permanently removed</li>
+                    <li>This action cannot be reversed</li>
+                    <li>Any employees assigned to this department may be affected</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <AlertDialogFooter>
+            <AlertDialogCancel 
+              disabled={isDeptDeleting}
+              className="font-medium"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDeleteDepartment}
+              disabled={isDeptDeleting}
+              className="bg-red-600 hover:bg-red-700 font-medium"
+            >
+              {isDeptDeleting ? (
+                <>
+                  <span className="mr-2">🗑️</span>
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <span className="mr-2">🗑️</span>
+                  Yes, Delete Permanently
+                </>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {ValidationDialog}
+
+      {/* Substitution Validation Dialog */}
+      {SubstitutionValidationDialog}
+
+      {/* Schedule Removal Success Dialog */}
+      <AlertDialog open={scheduleRemovedDialogOpen} onOpenChange={setScheduleRemovedDialogOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-full ${removedScheduleDetails?.type === 'class' ? 'bg-blue-100' : 'bg-purple-100'}`}>
+                <CheckCircle className={`h-6 w-6 ${removedScheduleDetails?.type === 'class' ? 'text-blue-600' : 'text-purple-600'}`} />
+              </div>
+              <div className="flex-1">
+                <AlertDialogTitle className="text-xl">
+                  {removedScheduleDetails?.type === 'class' ? 'Class Schedule Removed' : 'Exam Schedule Removed'}
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-base mt-1">
+                  The schedule has been successfully removed
+                </AlertDialogDescription>
+              </div>
+            </div>
+          </AlertDialogHeader>
+          
+          {removedScheduleDetails && (
+            <div className="my-4 space-y-3">
+              <div className={`rounded-lg border-2 p-4 ${removedScheduleDetails.type === 'class' ? 'border-blue-200 bg-blue-50' : 'border-purple-200 bg-purple-50'}`}>
+                <p className="font-semibold text-gray-900 mb-3">
+                  {removedScheduleDetails.type === 'class' ? 'Class Schedule Details:' : 'Exam Schedule Details:'}
+                </p>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-gray-700 min-w-[80px]">Subject:</span>
+                    <span className="text-gray-900">{removedScheduleDetails.subjectName}</span>
+                  </div>
+                  {removedScheduleDetails.section && (
+                    <div className="flex items-start gap-2">
+                      <span className="font-medium text-gray-700 min-w-[80px]">Section:</span>
+                      <span className="text-gray-900">{removedScheduleDetails.section}</span>
+                    </div>
+                  )}
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-gray-700 min-w-[80px]">Day:</span>
+                    <span className="text-gray-900">{removedScheduleDetails.dayName}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="font-medium text-gray-700 min-w-[80px]">Time:</span>
+                    <span className="text-gray-900">{removedScheduleDetails.timeRange}</span>
+                  </div>
+                  {removedScheduleDetails.roomCode && (
+                    <div className="flex items-start gap-2">
+                      <span className="font-medium text-gray-700 min-w-[80px]">Room:</span>
+                      <span className="text-gray-900">{removedScheduleDetails.roomCode}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => setScheduleRemovedDialogOpen(false)}
+              className={`font-medium ${removedScheduleDetails?.type === 'class' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-purple-600 hover:bg-purple-700'}`}
+            >
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Move Schedule Dialog */}
+      <Dialog open={moveScheduleDialogOpen} onOpenChange={setMoveScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Move Schedule to Another Day</DialogTitle>
+            <DialogDescription>
+              Select the day you want to move this schedule to.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            {scheduleToMove && (
+              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm font-medium text-blue-900 dark:text-blue-100 mb-1">
+                  Moving schedule:
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300">
+                  {formatDbTime12h(scheduleToMove.timeStart)} - {formatDbTime12h(scheduleToMove.timeEnd)}
+                </p>
+              </div>
+            )}
+            <div className="grid grid-cols-2 gap-3">
+              {[1, 2, 3, 4, 5, 6].map((dayNum) => {
+                const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                const dayColors = [
+                  'bg-red-500 hover:bg-red-600',
+                  'bg-orange-500 hover:bg-orange-600',
+                  'bg-green-500 hover:bg-green-600',
+                  'bg-blue-500 hover:bg-blue-600',
+                  'bg-purple-500 hover:bg-purple-600',
+                  'bg-indigo-500 hover:bg-indigo-600',
+                ]
+                const isCurrentDay = scheduleToMove?.currentDay === dayNum
+                const hasConflict = scheduleToMove ? hasTimeConflict(dayNum, scheduleToMove.timeStart, scheduleToMove.timeEnd, scheduleToMove.scheduleId) : false
+                const isDisabled = isMovingSchedule || isCurrentDay || hasConflict
+                
+                return (
+                  <div key={dayNum} className="relative">
+                    <Button
+                      onClick={() => handleConfirmMoveSchedule(dayNum)}
+                      disabled={isDisabled}
+                      className={cn(
+                        "text-white font-semibold py-6 transition-all w-full",
+                        dayColors[dayNum - 1],
+                        isDisabled && "opacity-50 cursor-not-allowed",
+                        isMovingSchedule && "opacity-50 cursor-wait"
+                      )}
+                      title={
+                        isCurrentDay 
+                          ? "This is the current day" 
+                          : hasConflict 
+                            ? "Time conflict: Another schedule exists at this time" 
+                            : `Move to ${dayNames[dayNum - 1]}`
+                      }
+                    >
+                      {dayNames[dayNum - 1]}
+                      {isCurrentDay && " (Current)"}
+                      {hasConflict && !isCurrentDay && " (Conflict)"}
+                    </Button>
+                    {hasConflict && !isCurrentDay && (
+                      <div className="absolute -top-1 -right-1">
+                        <div className="bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center" title="Time conflict detected">
+                          !
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            {scheduleToMove && (
+              <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                <p className="text-xs text-yellow-800 dark:text-yellow-200">
+                  <strong>Note:</strong> Days marked with "Conflict" have existing schedules at the same time and cannot be selected.
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMoveScheduleDialogOpen(false)
+                setScheduleToMove(null)
+              }}
+              disabled={isMovingSchedule}
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+

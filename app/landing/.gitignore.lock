@@ -1,0 +1,19 @@
+# ========================================
+# ⚠️ THIS FILE IS LOCKED - DO NOT EDIT ⚠️
+# ========================================
+#
+# This folder contains UI/Design files that are FINAL.
+# DO NOT MODIFY these files without design team approval.
+#
+# For backend work, edit:
+# - app/api/*/route.ts (API routes)
+# - lib/*.ts (service files)
+#
+# DO NOT EDIT:
+# - This file (app/landing/page.tsx)
+# - app/dashboard/*.tsx files
+# - components/*.tsx files
+#
+# Backend Developer: Read SEPARATION_GUIDE.md first!
+# ========================================
+
